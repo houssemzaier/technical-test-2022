@@ -1,0 +1,72 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdk buildConfig.compileSdk
+
+    defaultConfig {
+        applicationId "fr.ratp.technical.test"
+        minSdk buildConfig.minSdk
+        targetSdk buildConfig.targetSdk
+        versionCode 1
+        versionName "0.0.1"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+        freeCompilerArgs += [
+                "-Xopt-in=kotlin.RequiresOptIn",
+                "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi",
+                "-Xuse-experimental=kotlinx.coroutines.FlowPreview",
+        ]
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+        coreLibraryDesugaringEnabled true
+    }
+
+    buildFeatures {
+        viewBinding true
+    }
+    testOptions {
+        unitTests.returnDefaultValues true
+    }
+
+}
+
+dependencies {
+    coreLibraryDesugaring libs.android.desugarJdkLibs
+    implementation libs.kotlinx.coroutines.core
+    implementation libs.kotlinx.coroutines.android
+
+    implementation libs.androidx.appcompat
+    implementation libs.androidx.recyclerview
+    implementation libs.androidx.constraintlayout
+    implementation libs.google.material
+
+    implementation libs.androidx.activity.ktx
+    implementation libs.androidx.core.ktx
+    implementation libs.androidx.core.ktx
+    implementation libs.androidx.lifecycle.runtime.ktx
+    implementation libs.androidx.lifecycle.viewModel.ktx
+    implementation libs.androidx.paging.common.ktx
+    implementation libs.androidx.paging.runtime.ktx
+
+    // testing
+    testImplementation libs.junit
+    testImplementation libs.truth
+    testImplementation libs.mockito.kotlin
+    testImplementation libs.kotlinx.coroutines.test
+
+}
