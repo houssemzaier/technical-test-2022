@@ -22,37 +22,35 @@ class WordViewModel(
         private val TAG = WordViewModel::class.java.simpleName
     }
 
-    private val _words: MutableStateFlow<PagingData<WordUiModel>> =
-        MutableStateFlow(PagingData.empty())
-    val words: Flow<PagingData<WordUiModel>> = _words.asStateFlow()
+    private val _words: MutableStateFlow<WordUiState> =
+        MutableStateFlow(WordUiState.Success(PagingData.empty()))
+
+    val words:  Flow<WordUiState> = _words.asStateFlow()
 
     private val querySharedFlow = MutableSharedFlow<Flow<Query>>()
 
-    private val _errorSharedFlow = MutableSharedFlow<String>()
-    val errorSharedFlow = _errorSharedFlow.asSharedFlow()
-
     init {
-             querySharedFlow
-                .debounce(500L)
-                .flatMapLatest { it }
-                .distinctUntilChanged()
-                .onEach {
-                    Log.i(TAG, "query $it")
-                }
-                .catch { cause ->
-                    Log.e(TAG, "an error was catch", cause)
-                    cause.localizedMessage?.let { _errorSharedFlow.emit(it) }
-                }
-                .flatMapLatest {
-                    getWordsUseCase.invoke(it)
-                }
-                .map(::mapToUiPagingData)
-                .cachedIn(coroutineProvider.provideViewModelScope(this))
-                .flowOn(coroutineProvider.provideDispatcherCpu())
-                 .onEach {
-                     _words.emit(it)
-                 }
-                 .launchIn(coroutineProvider.provideViewModelScope(this))
+        querySharedFlow
+            .debounce(500L)
+            .flatMapLatest { it }
+            .distinctUntilChanged()
+            .onEach {
+                Log.i(TAG, "query $it")
+            }
+            .catch { cause ->
+                Log.e(TAG, "an error was catch", cause)
+                cause.localizedMessage?.let { _words.emit(WordUiState.Error(it)) }
+            }
+            .flatMapLatest {
+                getWordsUseCase.invoke(it)
+            }
+            .map(::mapToUiPagingData)
+            .cachedIn(coroutineProvider.provideViewModelScope(this))
+            .flowOn(coroutineProvider.provideDispatcherCpu())
+            .onEach {
+                _words.emit(WordUiState.Success(it))
+            }
+            .launchIn(coroutineProvider.provideViewModelScope(this))
 
     }
 
@@ -65,4 +63,9 @@ class WordViewModel(
         pagingData.map { word ->
             word.toUiModel()
         }
+
+    sealed class WordUiState {
+        data class Success(val wordUiModel: PagingData<WordUiModel>) : WordUiState()
+        class Error(val errorMessage: String) : WordUiState()
+    }
 }

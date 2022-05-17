@@ -10,7 +10,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.paging.LoadState.Loading
-import androidx.paging.PagingData
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.textfield.TextInputLayout
@@ -50,18 +49,20 @@ class MainActivity : AppCompatActivity() {
         binding.bindProgressIndicator(adapter)
         binding.observeInputEditTextForm()
         loadData(viewModel)
-        collectAndDiplayWords(viewModel, adapter)
-        handleErrorMessage(viewModel)
+        collectAndDisplayWordUiState(viewModel, adapter)
     }
 
-    private fun collectAndDiplayWords(
+    private fun collectAndDisplayWordUiState(
         viewModel: WordViewModel,
         adapter: WordAdapter,
     ) {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.words.collectLatest { words: PagingData<WordUiModel> ->
-                    adapter.submitData(words)
+                viewModel.words.collectLatest { state ->
+                    when (state) {
+                        is WordViewModel.WordUiState.Error -> handleErrorMessage(state.errorMessage)
+                        is WordViewModel.WordUiState.Success -> adapter.submitData(state.wordUiModel)
+                    }
                 }
             }
         }
@@ -106,14 +107,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun handleErrorMessage(viewModel: WordViewModel) {
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.errorSharedFlow.collectLatest {
-                    Toast.makeText(this@MainActivity, it, Toast.LENGTH_LONG).show()
-                }
-            }
-        }
+    private fun handleErrorMessage(errorMessage: String) {
+        Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
     }
 
     private fun ActivityMainBinding.observeInputEditTextForm() {

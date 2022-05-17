@@ -22,16 +22,14 @@ import org.mockito.kotlin.whenever
 
 class WordViewModelTest {
 
-
     private lateinit var sut: WordViewModel
     private val getWordsUseCaseMock: GetWordsUseCase = mock()
     private val coroutineProviderMock: CoroutineProvider = mock()
 
     private val dispatcher = UnconfinedTestDispatcher()
 
-
     @Test
-    fun `verify that getWordsUseCase is getting the same query from viewModel`() = runTest(dispatcher) {
+    fun `verify that getWordsUseCase is getting the same query from viewModel`() = runTest  {
 
         val job = launch(dispatcher + CoroutineName("FAKE_VIEW_MODEL_SCOPE")) {
             val data = NumberTransformer.getWordListByRange(Query.DEFAULT_QUERY, 1..10)
@@ -52,7 +50,6 @@ class WordViewModelTest {
 
          job.cancelAndJoin()
     }
-
 
     private fun <T> T.asFlow() = flowOf(this)
 }
